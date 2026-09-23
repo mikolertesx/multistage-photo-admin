@@ -10,3 +10,7 @@ terraform {
 provider "aws" {
   region = "us-east-1"
 }
+
+resource "aws_s3_bucket" "media_bucket" {
+  bucket = "multistage-photo-admin-media-bucket"
+}
