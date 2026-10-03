@@ -30,7 +30,7 @@ resource "aws_s3_bucket_policy" "allow_external_access" {
   bucket = aws_s3_bucket.media_bucket.id
   policy = data.aws_iam_policy_document.allow_access_from_another_account.json
 
-  depends_on = [ aws_s3_bucket_public_access_block.allow_public ]
+  depends_on = [aws_s3_bucket_public_access_block.allow_public]
 }
 
 data "aws_iam_policy_document" "allow_access_from_another_account" {
@@ -50,6 +50,11 @@ data "aws_iam_policy_document" "allow_access_from_another_account" {
       "${aws_s3_bucket.media_bucket.arn}/*",
     ]
   }
+}
+
+module "signing_lambda" {
+  source    = "./modules/signing-lambda"
+  bucket_id = aws_s3_bucket.media_bucket.id
 }
 
 output "aws_s3_bucket_id" {
