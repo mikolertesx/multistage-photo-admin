@@ -61,3 +61,7 @@ output "aws_s3_bucket_id" {
   value = aws_s3_bucket.media_bucket.id
 }
 
+output "apigateway_url" {
+  value = module.signing_lambda.apigateway_url
+}
+
