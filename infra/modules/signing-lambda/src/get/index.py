@@ -3,10 +3,10 @@ import os
 
 import boto3
 
-
+# Signs get request.
 def handler(event, context):
     url = boto3.client("s3").generate_presigned_url(
-        "put_object",
+        "get_object",
         Params={
             "Bucket": os.environ["BUCKET"],
             "Key": event["queryStringParameters"]["key"],

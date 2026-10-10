@@ -3,9 +3,11 @@ variable "bucket_id" {
 }
 
 data "archive_file" "lambda" {
+  for_each = toset(["get", "put"])
+
   type        = "zip"
-  source_file = "${path.module}/src/index.py"
-  output_path = "${path.module}/dist/lambda.zip"
+  source_file = "${path.module}/src/${each.key}/index.py"
+  output_path = "${path.module}/dist/${each.key}.zip"
 }
 
 resource "aws_iam_role" "this" {
@@ -52,13 +54,15 @@ resource "aws_iam_role_policy_attachment" "logs" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
-resource "aws_lambda_function" "this" {
-  function_name    = "s3-signing"
+resource "aws_lambda_function" "signing" {
+  for_each = data.archive_file.lambda
+
+  function_name    = "s3-signing-${each.key}"
   role             = aws_iam_role.this.arn
   runtime          = "python3.12"
   handler          = "index.handler"
-  filename         = data.archive_file.lambda.output_path
-  source_code_hash = data.archive_file.lambda.output_base64sha256
+  filename         = each.value.output_path
+  source_code_hash = each.value.output_base64sha256
 
   environment {
     variables = {
@@ -68,9 +72,11 @@ resource "aws_lambda_function" "this" {
 }
 
 resource "aws_lambda_permission" "apigw" {
+  for_each = aws_lambda_function.signing
+
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.this.function_name
+  function_name = each.value.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.lambdaGWRestApi.execution_arn}/*/*"
+  source_arn    = "${aws_api_gateway_rest_api.lambdaGWRestApi.execution_arn}/*/*/*"
 }

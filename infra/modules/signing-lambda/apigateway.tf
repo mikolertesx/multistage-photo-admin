@@ -13,8 +13,16 @@ resource "aws_api_gateway_deployment" "lambdaGWRestApiDeployment" {
   rest_api_id = aws_api_gateway_rest_api.lambdaGWRestApi.id
 
   triggers = {
-    redeployment = sha1(jsonencode(aws_api_gateway_rest_api.lambdaGWRestApi.body))
+    redeployment = sha1(jsonencode([
+      aws_api_gateway_resource.signing,
+      aws_api_gateway_method.signing,
+      aws_api_gateway_integration.get_signin_method_integration
+    ]))
   }
+
+  depends_on = [ 
+     aws_api_gateway_integration.get_signin_method_integration,
+  ]
 
   lifecycle {
     create_before_destroy = true
@@ -37,20 +45,33 @@ resource "aws_api_gateway_method_settings" "example" {
   }
 }
 
-resource "aws_api_gateway_method" "get_method" {
-  rest_api_id = aws_api_gateway_rest_api.lambdaGWRestApi.id
-  resource_id = aws_api_gateway_rest_api.lambdaGWRestApi.root_resource_id
-  http_method = "GET"
-  authorization = "NONE"
-}
-
 resource "aws_api_gateway_integration" "get_signin_method_integration" {
+  for_each = aws_api_gateway_method.signing
+
   rest_api_id = aws_api_gateway_rest_api.lambdaGWRestApi.id
-  resource_id = aws_api_gateway_rest_api.lambdaGWRestApi.root_resource_id
-  http_method = aws_api_gateway_method.get_method.http_method
+  resource_id = each.value.resource_id
+  http_method = each.value.http_method
   integration_http_method = "POST"
   type = "AWS_PROXY"
-  uri = aws_lambda_function.this.invoke_arn
+  uri = aws_lambda_function.signing[each.key].invoke_arn
+}
+
+resource "aws_api_gateway_resource" "signing" {
+  for_each = aws_lambda_function.signing
+
+  rest_api_id = aws_api_gateway_rest_api.lambdaGWRestApi.id
+  parent_id = aws_api_gateway_rest_api.lambdaGWRestApi.root_resource_id
+
+  path_part = each.key
+}
+
+resource "aws_api_gateway_method" "signing" {
+  for_each = aws_api_gateway_resource.signing
+
+  rest_api_id = aws_api_gateway_rest_api.lambdaGWRestApi.id
+  resource_id = each.value.id
+  http_method = "GET"
+  authorization = "NONE"
 }
 
 output "apigateway_url" {
