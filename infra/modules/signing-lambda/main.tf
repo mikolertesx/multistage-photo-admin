@@ -3,7 +3,7 @@ variable "bucket_id" {
 }
 
 data "archive_file" "lambda" {
-  for_each = toset(["get", "put"])
+  for_each = toset(["get", "put", "create_project"])
 
   type        = "zip"
   source_file = "${path.module}/src/${each.key}/index.py"
