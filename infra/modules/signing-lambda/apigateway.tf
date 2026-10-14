@@ -1,6 +1,16 @@
 # Copyright IBM Corp. 2014, 2026
 # SPDX-License-Identifier: MPL-2.0
 
+locals {
+  routes = {
+    for name, fn in aws_lambda_function.signing : name => {
+      path = name
+      method = "GET"
+      uri = fn.invoke_arn
+    }
+  }
+}
+
 resource "aws_api_gateway_rest_api" "lambdaGWRestApi" {
   name = "Signin-Lambda URL"
 
@@ -13,11 +23,7 @@ resource "aws_api_gateway_deployment" "lambdaGWRestApiDeployment" {
   rest_api_id = aws_api_gateway_rest_api.lambdaGWRestApi.id
 
   triggers = {
-    redeployment = sha1(jsonencode([
-      aws_api_gateway_resource.signing,
-      aws_api_gateway_method.signing,
-      aws_api_gateway_integration.get_signin_method_integration
-    ]))
+    redeployment = sha1(jsonencode(local.routes))
   }
 
   depends_on = [ 
