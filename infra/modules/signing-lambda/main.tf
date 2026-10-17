@@ -2,10 +2,11 @@ variable "bucket_id" {
   type = string
 }
 
+# gets the project files
 data "archive_file" "lambda" {
   for_each = toset([
-    "get", 
-    "put", 
+    "get_file", 
+    "put_file", 
     "create_project",
     "get_project_list"
     ])
@@ -15,6 +16,7 @@ data "archive_file" "lambda" {
   output_path = "${path.module}/dist/${each.key}.zip"
 }
 
+# allows lambda to assume a role.
 resource "aws_iam_role" "this" {
   name = "s3-signing-role"
 
@@ -28,6 +30,7 @@ resource "aws_iam_role" "this" {
   })
 }
 
+# allows `this` role to list inside bucket, and to get,put,delete,abort bucket.
 resource "aws_iam_role_policy" "s3" {
   name = "s3-object-access"
   role = aws_iam_role.this.id
@@ -54,11 +57,13 @@ resource "aws_iam_role_policy" "s3" {
   })
 }
 
+# Adds basic lambda execution role to s3 signing role
 resource "aws_iam_role_policy_attachment" "logs" {
   role       = aws_iam_role.this.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
 
+# Creates a function from each dist file.
 resource "aws_lambda_function" "signing" {
   for_each = data.archive_file.lambda
 
@@ -76,6 +81,7 @@ resource "aws_lambda_function" "signing" {
   }
 }
 
+# Allows Lambda to invoke Api gateway
 resource "aws_lambda_permission" "apigw" {
   for_each = aws_lambda_function.signing
 
@@ -83,5 +89,6 @@ resource "aws_lambda_permission" "apigw" {
   action        = "lambda:InvokeFunction"
   function_name = each.value.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.lambdaGWRestApi.execution_arn}/*/*/*"
+  # source_arn    = "${aws_api_gateway_rest_api.lambdaGWRestApi.execution_arn}/*/*/*"
+  source_arn = "${aws_apigatewayv2_api.lambdaGWRestApi.execution_arn}/*/*/*"
 }
