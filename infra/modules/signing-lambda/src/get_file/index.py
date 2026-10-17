@@ -13,4 +13,8 @@ def handler(event, context):
         },
         ExpiresIn=900,
     )
-    return {"statusCode": 200, "body": json.dumps({"url": url})}
+    return {
+        "statusCode": 200,
+        "headers": {"content-type": "application/json"},
+        "body": json.dumps({"url": url}),
+    }
