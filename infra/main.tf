@@ -57,6 +57,10 @@ module "signing_lambda" {
   bucket_id = aws_s3_bucket.media_bucket.id
 }
 
+module "dynamodb_projects" {
+  source = "./modules/dynamo-projects"
+}
+
 output "aws_s3_bucket_id" {
   value = aws_s3_bucket.media_bucket.id
 }
