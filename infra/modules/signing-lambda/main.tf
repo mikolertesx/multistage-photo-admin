@@ -2,14 +2,22 @@ variable "bucket_id" {
   type = string
 }
 
+variable "dynamodb_table_name" {
+  type = string
+}
+
+variable "dynamodb_table_arn" {
+  type = string
+}
+
 # gets the project files
 data "archive_file" "lambda" {
   for_each = toset([
-    "get_file", 
-    "put_file", 
+    "get_file",
+    "put_file",
     "create_project",
     "get_project_list"
-    ])
+  ])
 
   type        = "zip"
   source_file = "${path.module}/src/${each.key}/index.py"
@@ -57,6 +65,28 @@ resource "aws_iam_role_policy" "s3" {
   })
 }
 
+# allows `this` role to put, get, and delete items in the projects table.
+resource "aws_iam_role_policy" "dynamoDB" {
+  name = "dynamodb-item-access"
+  role = aws_iam_role.this.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "dynamodb:PutItem",
+          "dynamodb:GetItem",
+          "dynamodb:DeleteItem",
+        ]
+        Resource = var.dynamodb_table_arn
+      },
+    ]
+  })
+}
+
+
 # Adds basic lambda execution role to s3 signing role
 resource "aws_iam_role_policy_attachment" "logs" {
   role       = aws_iam_role.this.name
@@ -76,7 +106,8 @@ resource "aws_lambda_function" "signing" {
 
   environment {
     variables = {
-      BUCKET = var.bucket_id
+      BUCKET   = var.bucket_id
+      DYNAMODB = var.dynamodb_table_name
     }
   }
 }
@@ -89,5 +120,5 @@ resource "aws_lambda_permission" "apigw" {
   action        = "lambda:InvokeFunction"
   function_name = each.value.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn = "${aws_apigatewayv2_api.lambdaGWRestApi.execution_arn}/*/*/*"
+  source_arn    = "${aws_apigatewayv2_api.lambdaGWRestApi.execution_arn}/*/*/*"
 }
