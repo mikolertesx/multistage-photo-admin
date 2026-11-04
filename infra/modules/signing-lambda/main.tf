@@ -78,6 +78,7 @@ resource "aws_iam_role_policy" "dynamoDB" {
         Action = [
           "dynamodb:PutItem",
           "dynamodb:GetItem",
+          "dynamodb:Scan",
           "dynamodb:DeleteItem",
         ]
         Resource = var.dynamodb_table_arn
