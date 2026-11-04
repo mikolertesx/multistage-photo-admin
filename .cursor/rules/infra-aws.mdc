@@ -1,0 +1,34 @@
+---
+description: AWS layout, data model, and how to change infra without re-reading every file
+globs: infra/**/*.tf,infra/**/*.py,infra/**/*.hcl
+alwaysApply: false
+---
+
+# Infra
+
+Terraform root is `infra/main.tf` only. Run `terraform` from `infra/`. No workspaces, tfvars, or env stacks. Region `us-east-1`. State bucket `terraform-locks-1447`, key `global/multistage-photo-admin`, `use_lockfile = true`. Providers in `.terraform.lock.hcl`: aws 6.66.0, archive 2.8.1.
+
+Hardcoded names: bucket `multistage-photo-admin-media-bucket`, table `project-table-terraform-mikolertesx`, role `s3-signing-role`, API `Signin-Lambda URL`, stage `development`.
+
+## Wiring
+
+`main.tf` creates the bucket (public access block disabled; policy grants `s3:GetObject` and `s3:ListBucket` to `*`) and passes `bucket_id`, `dynamodb_table_name`, and `dynamodb_table_arn` into `modules/signing-lambda`. `modules/dynamo-projects` is one on-demand table, hash key `projectNameKey` (S), no GSIs.
+
+Lambdas: `for_each` over `get_file`, `put_file`, `create_project`, `get_project_list`. Source `modules/signing-lambda/src/<name>/index.py`, handler `index.handler`, runtime python3.12, zip `dist/<name>.zip` (gitignored). One shared role. Env on every function: `BUCKET`, `DYNAMODB`. IAM is list/get/put/delete/abort on that bucket and DynamoDB PutItem/GetItem/DeleteItem only — no Scan or Query.
+
+## API
+
+HTTP API (v2), `auto_deploy`. Routes are all `GET /<name>` with query params. `apigateway.tf` builds them from the same `for_each`.
+
+- `create_project?project_name=` — code = name with `[^\w-]` removed (`"My Project!"` → `MyProject`). Puts `projects/{code}/README.md` and `projects/{code}/sources/README.md`, then item `{projectNameKey: code, title: name}`.
+- `get_project_list` — S3 `ListObjectsV2` `Prefix=projects/`, `Delimiter=/`, `MaxKeys=100`. Body `{projectList: CommonPrefixes}` (`[{Prefix: "projects/{code}/"}]`). Does not read DynamoDB.
+- `get_file?key=` / `put_file?key=` — presigned get/put, `ExpiresIn=900`, body `{url}`.
+
+400 `{message}` if params, name, or key is missing. 500 `{message}` if `BUCKET` or, for create, `DYNAMODB` is unset.
+
+## Change rules
+
+- New endpoint: add `src/<name>/index.py` with `handler`, and add `<name>` to the `toset` in `signing-lambda/main.tf`. Do not hand-write the function, permission, integration, or route.
+- New AWS action: extend `aws_iam_role_policy.s3` or `.dynamoDB`. A Scan/Query of projects fails until that policy allows it.
+- Leave the public bucket policy in place. Reads are meant to work without CloudFront. Presigned URLs cover writes and keyed gets.
+- Do not add a region, stage, or rename resources unless asked. Root outputs: `aws_s3_bucket_id`, `apigateway_url`.

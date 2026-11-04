@@ -1,0 +1,14 @@
+---
+description: Where code lives so the tree does not need to be re-scanned
+alwaysApply: true
+---
+
+# Repo map
+
+pnpm workspace (`apps/*`, `packages/*`). Node >=18.18, pnpm >=9. Root scripts delegate to `web`: `pnpm dev`, `pnpm build`, `pnpm lint`, `pnpm preview`.
+
+- `apps/web` — Vite + React. `src/env.ts` reads `VITE_APP_ENV` (`dev`|`staging`|`prod`) and `VITE_SITE_NAME`. No API client yet.
+- `packages/eslint-config`, `packages/typescript-config` — shared config (`@repo/*`). No application code.
+- `infra/` — Terraform for S3, DynamoDB, Lambda, and HTTP API. Open those files only to edit them; the infra rule holds the layout.
+
+`App.tsx` says the SPA is on S3 and CloudFront. Terraform does not deploy the SPA or create CloudFront.
