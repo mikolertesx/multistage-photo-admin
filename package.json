@@ -3,8 +3,8 @@
   "private": true,
   "description": "React monorepo",
   "scripts": {
-    "dev": "pnpm --filter web dev",
-    "build": "pnpm --filter web build",
+    "dev": "node scripts/run-with-outputs.mjs dev",
+    "build": "node scripts/run-with-outputs.mjs build",
     "lint": "pnpm --filter web lint",
     "preview": "pnpm --filter web preview"
   },

@@ -1,6 +1,8 @@
-import { appEnv, siteName } from './env'
+import { appEnv, siteName,  appApiURL} from './env'
 
 function App() {
+  console.log(appApiURL)
+
   return (
     <main className="page">
       <p className="env">{appEnv}</p>
