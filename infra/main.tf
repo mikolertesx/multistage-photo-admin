@@ -52,10 +52,17 @@ data "aws_iam_policy_document" "allow_access_from_another_account" {
   }
 }
 
-module "signing_lambda" {
-  source    = "./modules/signing-lambda"
-  bucket_id = aws_s3_bucket.media_bucket.id
+module "dynamodb_projects" {
+  source = "./modules/dynamo-projects"
 }
+
+module "signing_lambda" {
+  source              = "./modules/signing-lambda"
+  bucket_id           = aws_s3_bucket.media_bucket.id
+  dynamodb_table_name = module.dynamodb_projects.dynamodb_name
+  dynamodb_table_arn  = module.dynamodb_projects.dynamodb_arn
+}
+
 
 output "aws_s3_bucket_id" {
   value = aws_s3_bucket.media_bucket.id
