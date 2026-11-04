@@ -1,0 +1,4 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/infra/modules/signing-lambda/.venv/bin/python",
+  "python.terminal.activateEnvironment": true
+}
