@@ -1,16 +1,3 @@
-# Copyright IBM Corp. 2014, 2026
-# SPDX-License-Identifier: MPL-2.0
-
-locals {
-  routes = {
-    for name, fn in aws_lambda_function.signing : name => {
-      path   = name
-      method = "GET"
-      uri    = fn.invoke_arn
-    }
-  }
-}
-
 resource "aws_apigatewayv2_api" "lambdaGWRestApi" {
   name          = "Signin-Lambda URL"
   protocol_type = "HTTP"
