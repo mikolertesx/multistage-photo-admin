@@ -1,6 +1,9 @@
 resource "aws_apigatewayv2_api" "lambdaGWRestApi" {
   name          = "Signin-Lambda URL"
   protocol_type = "HTTP"
+  cors_configuration {
+    allow_origins = ["*"]
+  }
 }
 
 # DeploymentID is optional because you can set it to auto_deploy instead.
