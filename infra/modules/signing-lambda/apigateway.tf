@@ -1,6 +1,9 @@
 resource "aws_apigatewayv2_api" "lambdaGWRestApi" {
   name          = "Signin-Lambda URL"
   protocol_type = "HTTP"
+  cors_configuration {
+    allow_origins = ["*"]
+  }
 }
 
 # DeploymentID is optional because you can set it to auto_deploy instead.
@@ -8,6 +11,13 @@ resource "aws_apigatewayv2_stage" "developmentStage" {
   api_id        = aws_apigatewayv2_api.lambdaGWRestApi.id
   name          = "development"
   auto_deploy = true
+}
+
+data "aws_apigatewayv2_export" "openapi" {
+  api_id = aws_apigatewayv2_api.lambdaGWRestApi.id
+  stage_name = aws_apigatewayv2_stage.developmentStage.name
+  specification = "OAS30"
+  output_type = "JSON"
 }
 
 resource "aws_apigatewayv2_integration" "lambda_integration" {
@@ -31,4 +41,9 @@ resource "aws_apigatewayv2_route" "lambda_execution_route" {
 
 output "apigateway_url" {
     value = aws_apigatewayv2_stage.developmentStage.invoke_url
+}
+
+output "openapi" {
+  value = data.aws_apigatewayv2_export.openapi.body
+  sensitive = true
 }

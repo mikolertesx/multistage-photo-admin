@@ -6,3 +6,5 @@ export const appEnv: AppEnv =
   raw === 'staging' || raw === 'prod' || raw === 'dev' ? raw : 'dev'
 
 export const siteName = import.meta.env.VITE_SITE_NAME ?? 'Multistage Admin'
+
+export const appApiURL = import.meta.env.VITE_API_URL;

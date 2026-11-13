@@ -72,3 +72,7 @@ output "apigateway_url" {
   value = module.signing_lambda.apigateway_url
 }
 
+output "openapi" {
+  value = module.signing_lambda.openapi
+  sensitive = true
+}

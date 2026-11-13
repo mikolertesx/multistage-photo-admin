@@ -1,0 +1,25 @@
+{
+  "name": "@repo/api",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/app.ts"
+  },
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node22 --format=esm --outfile=dist/index.mjs",
+    "check": "tsc --noEmit",
+    "dev": "tsx src/dev.ts"
+  },
+  "dependencies": {
+    "@hono/aws-lambda": "^1.0.1",
+    "hono": "^4.13.17"
+  },
+  "devDependencies": {
+    "@hono/node-server": "^2.1.6",
+    "@repo/typescript-config": "workspace:*",
+    "esbuild": "^0.25.5",
+    "tsx": "^4.23.15",
+    "typescript": "~5.8.3"
+  }
+}

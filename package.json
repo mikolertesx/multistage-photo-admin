@@ -3,14 +3,24 @@
   "private": true,
   "description": "React monorepo",
   "scripts": {
-    "dev": "pnpm --filter web dev",
-    "build": "pnpm --filter web build",
+    "build": "node scripts/run-with-outputs.mjs build",
+    "dev": "node scripts/run-with-outputs.mjs dev",
     "lint": "pnpm --filter web lint",
+    "openAPI": "node scripts/generate-openapi.mjs",
     "preview": "pnpm --filter web preview"
   },
   "engines": {
     "node": ">=18.18.0",
     "pnpm": ">=9"
   },
-  "packageManager": "pnpm@9.15.4"
+  "packageManager": "pnpm@9.15.4",
+  "devDependencies": {
+    "@hey-api/openapi-ts": "^0.99.0",
+    "@types/aws-lambda": "8.10.164",
+    "openapi-typescript": "^7.13.0"
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.17.0",
+    "sst": "4.17.2"
+  }
 }
