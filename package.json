@@ -3,10 +3,10 @@
   "private": true,
   "description": "React monorepo",
   "scripts": {
-    "dev": "node scripts/run-with-outputs.mjs dev",
     "build": "node scripts/run-with-outputs.mjs build",
-    "openAPI": "node scripts/generate-openapi.mjs",
+    "dev": "node scripts/run-with-outputs.mjs dev",
     "lint": "pnpm --filter web lint",
+    "openAPI": "node scripts/generate-openapi.mjs",
     "preview": "pnpm --filter web preview"
   },
   "engines": {
@@ -16,9 +16,11 @@
   "packageManager": "pnpm@9.15.4",
   "devDependencies": {
     "@hey-api/openapi-ts": "^0.99.0",
+    "@types/aws-lambda": "8.10.164",
     "openapi-typescript": "^7.13.0"
   },
   "dependencies": {
-    "openapi-fetch": "^0.17.0"
+    "openapi-fetch": "^0.17.0",
+    "sst": "4.17.2"
   }
 }
